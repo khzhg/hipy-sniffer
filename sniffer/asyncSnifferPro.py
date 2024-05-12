@@ -28,7 +28,7 @@ browser_drivers = []
 # 全部毫秒为单位不需要转换
 class Sniffer:
     # 正则嗅探匹配表达式
-    urlRegex: str = 'http((?!http).){12,}?\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)\\?.*|http((?!http).){12,}\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)|http((?!http).)*?video/tos*'
+    urlRegex: str = 'http((?!http).){12,}?\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)\\?.*|http((?!http).){12,}\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a|mp3)|http((?!http).)*?video/tos*|http((?!http).)*?obj/tos*'
     urlNoHead: str = 'http((?!http).){12,}?(ac=dm&url=)'
     # 每次嗅探间隔毫秒
     playwright = None
@@ -206,6 +206,7 @@ class Sniffer:
         # 打开静态资源拦截器
         # await page.route(re.compile(r"\.(png|jpg|jpeg|css|ttf)$"), self._route_interceptor)
         await page.route(re.compile(r"\.(png|jpg|jpeg|ttf)$"), self._route_interceptor)
+        await page.route(re.compile(r".*google\.com.*"), lambda route: route.abort())
         # 打开弹窗拦截器
         page.on("dialog", self._on_dialog)
         # 打开页面错误监听
@@ -273,7 +274,8 @@ class Sniffer:
         page.set_default_timeout(timeout)
         response = {'content': '', 'headers': {'location': url}}
         try:
-            await page.goto(url, timeout=200)
+            # await page.goto(url, timeout=200)
+            await page.goto(url, wait_until='domcontentloaded')
         except Exception as e:
             self.log(f'fetCodeByWebView:page.goto 发生了错误:{e}')
         else:
@@ -446,7 +448,8 @@ class Sniffer:
         window.realUrls = []
         """)
         try:
-            await page.goto(playUrl, timeout=200)
+            # await page.goto(playUrl,timeout=200)
+            await page.goto(playUrl, wait_until='domcontentloaded')
         except Exception as e:
             self.log(f'snifferMediaUrl:page.goto发生错误:{e}')
             # await self.close_page(page)
